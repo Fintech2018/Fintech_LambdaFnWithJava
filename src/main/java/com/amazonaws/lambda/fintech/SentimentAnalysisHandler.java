@@ -46,7 +46,13 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
         // Get the object from the event and show its content type
         String bucket = event.getRecords().get(0).getS3().getBucket().getName();
         String key = event.getRecords().get(0).getS3().getObject().getKey();
+        String outputBucket = "fintech-lambda-output";
+        String outputKey = "output";
         try {
+        	 System.out.println("Input Bucket Name->"+bucket);    
+
+ 	         System.out.println("Input key Name->"+key); 
+ 	         
             S3Object s3Object = s3.getObject(new GetObjectRequest(bucket, key));
             String contentType = s3Object.getObjectMetadata().getContentType();
             context.getLogger().log("CONTENT TYPE: " + contentType);
@@ -58,9 +64,11 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
          		         textToUpload += scanner.nextLine();
  	               }
  	               scanner.close();
- 	          System.out.println("Bucket Name->"+bucket);    
+ 	          
+ 	              System.out.println("Output Bucket Name->"+outputBucket);    
 
- 	         System.out.println("key Name->"+key);  
+ 	 	         System.out.println("Output key Name->"+outputKey); 
+ 	         
 			// Call detectSentiment API
 			System.out.println("Calling DetectSentiment");
 			DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(textToUpload)
@@ -70,9 +78,11 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("End of DetectSentiment\n");
 			System.out.println("Done");
 			
-			String sentimentOutputFileKey = key+"/SentimentOutput";
-			s3.putObject(new PutObjectRequest(bucket,sentimentOutputFileKey, convertToCSV(detectSentimentResult)));
-			s3.putObject(new PutObjectRequest(bucket,sentimentOutputFileKey+"json", convertToJson(detectSentimentResult)));
+			
+			
+			String sentimentOutputFileKey = outputKey+"/SentimentOutput";
+			s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+".csv", convertToCSV(detectSentimentResult)));
+			s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+"json", convertToJson(detectSentimentResult)));
 			 // Call detectEntities API
 	        System.out.println("Calling DetectEntities");
 	        DetectEntitiesRequest detectEntitiesRequest = new DetectEntitiesRequest().withText(textToUpload)
@@ -82,9 +92,9 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("End of DetectEntities\n");
 			System.out.println("Done");
 			
-			String entityOutputFileKey = key+"/EntitiesOutput";
-			s3.putObject(new PutObjectRequest(bucket,entityOutputFileKey, convertToText(detectEntitiesResult.toString())));
-			s3.putObject(new PutObjectRequest(bucket,entityOutputFileKey+"json", convertToJson(detectEntitiesResult)));
+			String entityOutputFileKey = outputKey+"/EntitiesOutput";
+			s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+".txt", convertToText(detectEntitiesResult.toString())));
+			s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+"json", convertToJson(detectEntitiesResult)));
 			 // Call detectKeyphrase API
 	        System.out.println("Calling KeyPhrases Api");
 	        DetectKeyPhrasesRequest detectKeyPhrasesRequest = new DetectKeyPhrasesRequest().withText(textToUpload)
@@ -94,9 +104,9 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("End of DetectKeyPhrases\n");
 			System.out.println("Done");
 			
-			String phrasesoutputFileKey = key+"/KeyPhraseOutput";
-			s3.putObject(new PutObjectRequest(bucket,phrasesoutputFileKey, convertToCSV(detectKeyPhrasesResult)));
-			s3.putObject(new PutObjectRequest(bucket,phrasesoutputFileKey+"json", convertToJson(detectKeyPhrasesResult)));
+			String phrasesoutputFileKey = outputKey+"/KeyPhraseOutput";
+			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+".csv", convertToCSV(detectKeyPhrasesResult)));
+			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+"json", convertToJson(detectKeyPhrasesResult)));
             return "Success";
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,10 +126,11 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
  
             JSONArray docs = output.toJSONArray(output.names());//getJSONArray("");
  
-            File file=new File("JSONSEPERATOR_CSV.csv");
+            File file=new File("/tmp/JSONSEPERATOR_CSV.csv");
             String csv = CDL.toString(docs);
             FileUtils.writeStringToFile(file, csv);
-            System.out.println("Data has been Sucessfully Writeen to "+file);
+            System.out.println("Data has been Sucessfully Writeen to AbsolutePath "+file.getAbsolutePath());
+            System.out.println("Data has been Sucessfully Writeen to Path "+file.getPath());
             return file;
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,9 +140,10 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
     
     private File convertToText(String json) {
         try {
-            File file=new File("JSONSEPERATOR_TXT.txt");
+            File file=new File("/tmp/JSONSEPERATOR_TXT.txt");
             FileUtils.writeStringToFile(file, json);
-            System.out.println("Data has been Sucessfully Writeen to "+file);
+            System.out.println("Data has been Sucessfully Writeen to AbsolutePath "+file.getAbsolutePath());
+            System.out.println("Data has been Sucessfully Writeen to Path "+file.getPath());
             return file;
         } catch (Exception e) {
             e.printStackTrace();
@@ -146,7 +158,7 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 		 * Write object to file
 		 */
 		try {
-			File output=new File("result.json");
+			File output=new File("/tmp/result.json");
 			mapper.writeValue(output, object);//Plain JSON
 			return output;
 		} catch (Exception e) {
