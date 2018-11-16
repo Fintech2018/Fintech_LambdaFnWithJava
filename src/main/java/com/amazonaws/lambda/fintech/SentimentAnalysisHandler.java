@@ -68,6 +68,7 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
  	              System.out.println("Output Bucket Name->"+outputBucket);    
 
  	 	         System.out.println("Output key Name->"+outputKey); 
+ 	 	      
  	         
 			// Call detectSentiment API
 			System.out.println("Calling DetectSentiment");
@@ -79,10 +80,11 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("Done");
 			
 			
-			
-			String sentimentOutputFileKey = outputKey+"/SentimentOutput";
-			s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+".csv", convertToCSV(detectSentimentResult)));
-			s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+"json", convertToJson(detectSentimentResult)));
+			String outputFileName = key.substring(0, key.lastIndexOf("."));
+			String sentimentOutputFileKey = outputKey+"/Sentiment_"+outputFileName;
+			System.out.println("sentimentOutputFileKey->"+sentimentOutputFileKey);
+			//s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+".csv", convertToCSV(detectSentimentResult)));
+			s3.putObject(new PutObjectRequest(outputBucket,sentimentOutputFileKey+"_json", convertToJson(detectSentimentResult)));
 			 // Call detectEntities API
 	        System.out.println("Calling DetectEntities");
 	        DetectEntitiesRequest detectEntitiesRequest = new DetectEntitiesRequest().withText(textToUpload)
@@ -92,9 +94,10 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("End of DetectEntities\n");
 			System.out.println("Done");
 			
-			String entityOutputFileKey = outputKey+"/EntitiesOutput";
-			s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+".txt", convertToText(detectEntitiesResult.toString())));
-			s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+"json", convertToJson(detectEntitiesResult)));
+			String entityOutputFileKey = outputKey+"/Entities_"+outputFileName;
+			System.out.println("entityOutputFileKey->"+entityOutputFileKey);
+			//s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+".txt", convertToText(detectEntitiesResult.toString())));
+			s3.putObject(new PutObjectRequest(outputBucket,entityOutputFileKey+"_json", convertToJson(detectEntitiesResult)));
 			 // Call detectKeyphrase API
 	        System.out.println("Calling KeyPhrases Api");
 	        DetectKeyPhrasesRequest detectKeyPhrasesRequest = new DetectKeyPhrasesRequest().withText(textToUpload)
@@ -104,9 +107,11 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("End of DetectKeyPhrases\n");
 			System.out.println("Done");
 			
-			String phrasesoutputFileKey = outputKey+"/KeyPhraseOutput";
-			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+".csv", convertToCSV(detectKeyPhrasesResult)));
-			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+"json", convertToJson(detectKeyPhrasesResult)));
+			
+			String phrasesoutputFileKey = outputKey+"/KeyPhrase"+outputFileName;
+			System.out.println("phrasesoutputFileKey->"+phrasesoutputFileKey);
+			//s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+".csv", convertToCSV(detectKeyPhrasesResult)));
+			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+"_json", convertToJson(detectKeyPhrasesResult)));
             return "Success";
         } catch (Exception e) {
             e.printStackTrace();
