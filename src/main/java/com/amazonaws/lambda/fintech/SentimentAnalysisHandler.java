@@ -108,7 +108,7 @@ public class SentimentAnalysisHandler implements RequestHandler<S3Event, String>
 			System.out.println("Done");
 			
 			
-			String phrasesoutputFileKey = outputKey+"/KeyPhrase"+outputFileName;
+			String phrasesoutputFileKey = outputKey+"/KeyPhrase_"+outputFileName;
 			System.out.println("phrasesoutputFileKey->"+phrasesoutputFileKey);
 			//s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+".csv", convertToCSV(detectKeyPhrasesResult)));
 			s3.putObject(new PutObjectRequest(outputBucket,phrasesoutputFileKey+"_json", convertToJson(detectKeyPhrasesResult)));
